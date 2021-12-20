@@ -1,4 +1,4 @@
-# Sea otters microbiota project
+# Sea otter microbiota project
 
 This repository contains the R version 3.6.1 implementation of the analysis of the microbiota of sea otters described in:
 
