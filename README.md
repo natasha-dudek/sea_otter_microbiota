@@ -12,4 +12,5 @@ Coming soon...
 
 ### How to run
 
-Coming soon...
+1. format_ds.Rmd -> Generate a phyloseq object, calculate dataset stats (# samples, ASVs, etc), generate ASV tables at genus level for gingival and rectal samples & save as csv for plotting Figure 2A,B
+2. 
