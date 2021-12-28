@@ -1,0 +1,95 @@
+---
+---
+title: "Sea otter full dataset statistics (lane 1 + lane 2)"
+author: "Natasha Dudek"
+date: "20/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Set paths
+
+```{r}
+path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+physeq_lane1 <- file.path(path, "physeq_lane1.rds", fsep="/") # lane 1 ds (wild sea otters)
+physeq_MBAdiet <- file.path(path, "physeq_mba_diet.rds", fsep="/") # lane 2 -- MBA diet shift expt
+physeq_spp <- file.path(path, "physeq_spp_compare.rds", fsep="/") # lane 2 -- species comparison data
+```
+
+Set working directory
+
+```{r}
+setwd(path)
+getwd()
+```
+
+Load libraries
+
+```{r}
+library("phyloseq"); packageVersion("phyloseq")
+```
+
+Wild sea otters analysis (body sites, Helicobacter)
+```{r}
+physeq_wild <- readRDS(lane1_physeq)
+physeq_wild <- subset_samples(physeq_wild, facility == "CDFW") 
+physeq_wild <- subset_samples(physeq_wild, duplicate_capture == "no")
+physeq_wild <- subset_samples(physeq_wild, sample_type != "fecal")
+table(sample_data(physeq_wild)$sample_type)
+```
+
+For MBA diet shift experiment
+```{r}
+physeq_mba <- readRDS(physeq_MBAdiet)
+table(sample_data(physeq_mba)$sample_type)
+```
+
+For species comparisons and captivity analysis
+```{r}
+physeq_spp_orig <- readRDS(physeq_spp)
+physeq_spp_orig <- subset_samples(physeq_spp_orig, SampleID != "X595.L")
+physeq_spp_orig <- subset_samples(physeq_spp_orig, SampleID != "X595.rectal")
+sample_data(physeq_spp_orig)$sample_type <- gsub('stool', 'fecal', sample_data(physeq_spp_orig)$sample_type)
+physeq_spp_orig <- subset_samples(physeq_spp_orig, sample_type == "rectal" | sample_type == "oral" | sample_type == "fecal")
+table(sample_data(physeq_spp_orig)$sample_type)
+table(sample_data(physeq_spp_orig)$species)
+```
+
+merge these into one -- some MBA sea otters used in spp comparison
+```{r}
+physeq_lane2 <- merge_phyloseq(physeq_mba, physeq_spp_orig)
+```
+
+Remove phylogenetic tree from physeq objects -- cannot merge to to diff number of tips between lanes
+```{r}
+lane2_otu_table <- otu_table(physeq_lane2)
+lane2_tax_table <- tax_table(physeq_lane2)
+lane2_sample_data <- sample_data(physeq_lane2)
+physeq_lane2 <- merge_phyloseq(lane2_otu_table, lane2_tax_table, lane2_sample_data)
+
+lane1_otu_table <- otu_table(physeq_wild)
+lane1_tax_table <- tax_table(physeq_wild)
+lane1_sample_data <- sample_data(physeq_wild)
+physeq_lane1 <- merge_phyloseq(lane1_otu_table, lane1_tax_table, lane1_sample_data)
+
+physeq <- merge_phyloseq(physeq_lane1, physeq_lane2)
+```
+Make sure appropriate filters are in place
+```{r}
+physeq <- subset_samples(physeq, duplicate_capture != "yes")
+physeq = filter_taxa(physeq, function(x) sum(x) > 0, TRUE)
+sample_data(physeq)$sample_type <- gsub('stool', 'fecal', sample_data(physeq)$sample_type)
+```
+
+Get sample data
+```{r}
+nsamples(physeq)
+ntaxa(physeq)
+sum(sample_sums(physeq))
+table(sample_data(physeq)$sample_type)
+table(sample_data(physeq)$species)
+```
+### Note that the above does not show the right number of sea otter species. Sea otter prey and water are classified as "sea otter" in the mapping file to denote that they are associated with the sea otter samples. To get the number of sea otter samples, subtract water, non-sea otter otters, and prey species (n =4).
