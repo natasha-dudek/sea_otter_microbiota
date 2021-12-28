@@ -25,13 +25,13 @@ Set paths
 ```{r}
 path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
 asv_table <- file.path(path, "filtered_asvs.csv", fsep="/") # filtered ASVs
-phylogenetic_tree <- file.path(path, "tree.nwk", fsep="/") # 
+phylogenetic_tree <- file.path(path, "tree.nwk", fsep="/") 
 mapping_file <- file.path(path, "mapping_file.csv", fsep="/")
-phyloseq_object <- file.path(path, "phyloseq.rds", fsep="/")
-asv_oral <- file.path(path, "asv_table_genus_oral.csv", fsep="/")
-taxa_oral <- file.path(path, "taxa_table_genus_oral.csv", fsep="/")
-asv_rectal <- file.path(path, "asv_table_genus_rectal.csv", fsep="/")
-taxa_rectal <- file.path(path, "taxa_table_genus_rectal.csv", fsep="/")
+phyloseq_object <- file.path(path, "physeq_lane1.rds", fsep="/") # save physeq object as
+asv_oral <- file.path(path, "asv_table_genus_oral.csv", fsep="/") # save gingival ASV table (wild sea otters)
+taxa_oral <- file.path(path, "taxa_table_genus_oral.csv", fsep="/") # save gingival ASV table (wild sea otters)
+asv_rectal <- file.path(path, "asv_table_genus_rectal.csv", fsep="/") # save rectal ASV table (wild sea otters)
+taxa_rectal <- file.path(path, "taxa_table_genus_rectal.csv", fsep="/") # save rectal ASV table (wild sea otters)
 ```
 
 Set working directory
