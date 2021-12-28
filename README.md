@@ -12,5 +12,8 @@ Coming soon...
 
 ### How to run
 
-1. format_ds.Rmd -> Generate a phyloseq object, calculate dataset stats (# samples, ASVs, etc), generate ASV tables at genus level for gingival and rectal samples & save as csv for plotting Figure 2A,B
-2. 
+1. format_ds.Rmd -> Generate a phyloseq object for lane 1 dataset, calculate some basic stats relating to the wild sea otter samples analyzed here (# samples, ASVs, etc), generate ASV tables at genus level for gingival and rectal samples from wild sea otters (save as csv req'd plotting Figure 2A,B)
+2. full_dataset_stats.Rmd -> Generate useful statistics for the full dataset used in this project (total # samples in the project, including wild sea otters, captive sea otters, other otter species, etc)
+3. 
+
+More coming soon...
