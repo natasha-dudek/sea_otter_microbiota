@@ -1,4 +1,4 @@
-# Characterizing the microbiota of the threatened southern sea otter (Enhydra lutris nereis) to enhance conservation practice
+# Characterizing the microbiota of the threatened southern sea otter (_Enhydra lutris nereis_) to enhance conservation practice
 
 This repository contains the R version 3.6.1 and python version 3.7.6 implementations of the analysis described in:
 
