@@ -251,4 +251,4 @@ plot("rectal", args.rectal[0], args.verbose)
 plot("gingival", args.gingival[0], args.verbose)
 
 plt.tight_layout()
-plt.savefig(str(args.output)+".pdf")
+plt.savefig(args.output[0]+".pdf")
