@@ -12,8 +12,17 @@ Coming soon...
 
 ### How to run
 
-1. format_ds.Rmd -> Generate a phyloseq object for lane 1 dataset, calculate some basic stats relating to the wild sea otter samples analyzed here (# samples, ASVs, etc), generate ASV tables at genus level for gingival and rectal samples from wild sea otters (save as csv req'd plotting Figure 2A,B)
-2. full_dataset_stats.Rmd -> Generate useful statistics for the full dataset used in this project (total # samples in the project, including wild sea otters, captive sea otters, other otter species, etc)
-3. 
+To characterize the taxonomic structure of gingival and rectal microbiotas from wild sea otters:
+- community_composition_p1.py: 
+  -  For gingival and rectal samples, plots barplot showing taxa on the x-axis and relative abundance in samples on the y-axes (Figure 2A,B)
+- community_composition_p2.Rmd: 
+  - Plots an ordination of gingival, rectal, and otter-associated seawater samples and performs significance testing (Figure 2C)
+  - Plots a Venn diagram showing for sets of gingival, rectal, and otter-associated seawater ASVs (Figure 2D)
+
+To perform comparisons of the distal gut microbiota of different otter species:
+- spp_comparisons.Rmd: 
+  - Plot ordinations of distal gut samples from different otter species (Figures 3, S3)
+  - Perform a bootstrap test to investigate whether the average Unifrac distance between distal gut specimens within a species is significantly lower than the average distance between samples from sea otters vs North American river otters
+  - Perform differential abundance testing on sea otter vs North American river otter samples to probe how the composition of their microbiotas are distinct
 
 More coming soon...
