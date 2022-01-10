@@ -39,4 +39,4 @@ For R scipts: coming soon...
   - Perform and plot RDA analysis to visualize CPs (Figure S2A)
   - Compare alpha diversity of different CPs
   - Perform differential abundance testing to see which ASVs differ between CPs and visualize results (Figure S2B)
-  - Investigate potential correlations between CPs and metadata (sampling time of year, sampling location)
+  - Investigate potential correlations between CPs and metadata (sampling time, sampling location)
