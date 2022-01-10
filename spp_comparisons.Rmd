@@ -15,12 +15,8 @@ More specifically, in this script we will:
 Begin by setting paths and loading phyloseq object
 
 ```{r}
-#path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
-#physeq <- readRDS(path, "physeq_lane2_sppCompare.rds")
-#rmarkdown::render("/Users/natasha/Desktop/so_github/spp_comparisons.Rmd", clean=TRUE, output_format="html_document")
-
-setwd("/Users/natasha/Desktop/so_github")
-physeq <- readRDS("/Users/natasha/Documents/Research/relman-lab/docker_access/sea_otter/vPaper/mba_so/07-basic/physeq_spp_compare.rds")
+path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+physeq <- readRDS(path, "physeq_lane2_sppCompare.rds")
 ```
 
 Load libraries
