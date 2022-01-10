@@ -14,10 +14,7 @@ parser.add_argument('gingival', metavar='gingival_asvs.csv', type=str, nargs=1,
                     help='Path to a csv file containing the relative abundance of taxa in gingival samples. The first column should be sample IDs, the first row should be the name of each taxonomic group.')
                     
 parser.add_argument('rectal', metavar='rectal_asvs.csv', type=str, nargs=1,
-                    help='Path to a csv file containing the relative abundance of taxa in rectal samples. The first column should be sample IDs, the first row should be the name of each taxonomic group.')  
-                    
-parser.add_argument('output', metavar='output', type=str, nargs=1,
-                    help='Name of output figure file that will be generated.')                             
+                    help='Path to a csv file containing the relative abundance of taxa in rectal samples. The first column should be sample IDs, the first row should be the name of each taxonomic group.')                            
 
 parser.add_argument('-v', '--verbose', action="store_true", help='Print the median median relative abundance of each taxon across all samples')
 
@@ -251,4 +248,4 @@ plot("rectal", args.rectal[0], args.verbose)
 plot("gingival", args.gingival[0], args.verbose)
 
 plt.tight_layout()
-plt.savefig(args.output[0]+".pdf")
+plt.savefig("Fig2AB.pdf")
