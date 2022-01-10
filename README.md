@@ -12,26 +12,26 @@ Coming soon...
 
 ### How to run
 
-To characterize the taxonomic structure of gingival and rectal microbiotas from wild sea otters:
+**To characterize the taxonomic structure of gingival and rectal microbiotas from wild sea otters:**
 - community_composition_p1.py: 
   -  For gingival and rectal samples, plots barplot showing taxa on the x-axis and relative abundance in samples on the y-axes (Figure 2A,B)
 - community_composition_p2.Rmd: 
   - Plots an ordination of gingival, rectal, and otter-associated seawater samples and performs significance testing (Figure 2C)
   - Plots a Venn diagram showing for sets of gingival, rectal, and otter-associated seawater ASVs (Figure 2D)
 
-To perform comparisons of the distal gut microbiota of different otter species:
+**To perform comparisons of the distal gut microbiota of different otter species:**
 - spp_comparisons.Rmd: 
   - Plot ordinations of distal gut samples from different otter species (Figures 3, S3)
   - Perform a bootstrap test to investigate whether the average Unifrac distance between distal gut specimens within a species is significantly lower than the average distance between samples from sea otters vs North American river otters
   - Perform differential abundance testing on sea otter vs North American river otter samples to probe how the composition of their microbiotas are distinct
 
-To investigate the effect of diet on the sea otter microbiota:
+**To investigate the effect of diet on the sea otter microbiota:**
 - MBA diet shift experiment - diet_shift.Rmd
   - Plot PCoA of the microbiota structure of captive sea otters before and after a diet intervention (Figures 4B, S4)
 - Wild sea otters - diet_wild.Rmd
   - Plot PCoA of the microbiota structure of wild sea otters with well characterized diets (Figures 4C, S5)
 
-To characterize and investigate structure within the gingival microbiota of wild sea otters:
+**To characterize and investigate structure within the gingival microbiota of wild sea otters:**
 - gingival.Rmd:
   - Perform k-mediods clustering on gingival samples - clusters will be called community profiles (CPs)
   - Perform and plot RDA analysis to visualize CPs (Figure 2A)
