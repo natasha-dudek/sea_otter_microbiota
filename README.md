@@ -25,4 +25,16 @@ To perform comparisons of the distal gut microbiota of different otter species:
   - Perform a bootstrap test to investigate whether the average Unifrac distance between distal gut specimens within a species is significantly lower than the average distance between samples from sea otters vs North American river otters
   - Perform differential abundance testing on sea otter vs North American river otter samples to probe how the composition of their microbiotas are distinct
 
-More coming soon...
+To investigate the effect of diet on the sea otter microbiota:
+- MBA diet shift experiment - diet_shift.Rmd
+  - Plot PCoA of the microbiota structure of captive sea otters before and after a diet intervention (Figures 4B, s4)
+- Wild sea otters - diet_wild.Rmd
+  - Plot PCoA of the microbiota structure of wild sea otters with well characterized diets (Figures 4C, S5)
+
+To characterize and investigate structure within the gingival microbiota of wild sea otters:
+- gingival.Rmd:
+  - Perform k-mediods clustering on gingival samples - clusters will be called community profiles (CPs)
+  - Perform and plot RDA analysis to visualize CPs (Figure 2A)
+  - Compare alpha diversity of different CPs
+  - Perform differential abundance testing to see which ASVs differ between CPs and visualize results (Figure 2B)
+  - Investigate potential correlations between CPs and metadata (sampling time of year, sampling location)
