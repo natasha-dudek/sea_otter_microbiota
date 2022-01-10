@@ -29,6 +29,7 @@ For R scipts: coming soon...
 **To investigate the effect of diet on the sea otter microbiota:**
 - MBA diet shift experiment - diet_shift.Rmd
   - Plot PCoA of the microbiota structure of captive sea otters before and after a diet intervention (Figures 4B, S4)
+  - Perform differential abundance analysis to see which ASVs change in abundance between pre- and post- diet shift states
 - Wild sea otters - diet_wild.Rmd
   - Plot PCoA of the microbiota structure of wild sea otters with well characterized diets (Figures 4C, S5)
 
