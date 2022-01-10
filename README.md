@@ -27,7 +27,7 @@ To perform comparisons of the distal gut microbiota of different otter species:
 
 To investigate the effect of diet on the sea otter microbiota:
 - MBA diet shift experiment - diet_shift.Rmd
-  - Plot PCoA of the microbiota structure of captive sea otters before and after a diet intervention (Figures 4B, s4)
+  - Plot PCoA of the microbiota structure of captive sea otters before and after a diet intervention (Figures 4B, S4)
 - Wild sea otters - diet_wild.Rmd
   - Plot PCoA of the microbiota structure of wild sea otters with well characterized diets (Figures 4C, S5)
 
