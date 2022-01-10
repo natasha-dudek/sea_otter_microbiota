@@ -34,7 +34,7 @@ Coming soon...
 **To characterize and investigate structure within the gingival microbiota of wild sea otters:**
 - gingival.Rmd:
   - Perform k-mediods clustering on gingival samples - clusters will be called community profiles (CPs)
-  - Perform and plot RDA analysis to visualize CPs (Figure 2A)
+  - Perform and plot RDA analysis to visualize CPs (Figure S2A)
   - Compare alpha diversity of different CPs
-  - Perform differential abundance testing to see which ASVs differ between CPs and visualize results (Figure 2B)
+  - Perform differential abundance testing to see which ASVs differ between CPs and visualize results (Figure S2B)
   - Investigate potential correlations between CPs and metadata (sampling time of year, sampling location)
