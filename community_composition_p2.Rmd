@@ -1,0 +1,279 @@
+---
+title: "MDS plot and Venn diagram of wild sea otter-associated sample types"
+author: "Natasha Dudek"
+date: "03/12/2018"
+output: html_document
+---
+
+rmarkdown::render("/Users/natasha/Desktop/so_github/community_composition_p2.Rmd", clean=TRUE, output_format="html_document")
+
+In this script we will:
+1. Plot an ordination of gingival, rectal, and otter-associated seawater samples (Figure 2C) and perform significance testing to determine whether the composition of sample types is distinct (Figure 2C)
+2. Plot a Venn diagram of sets of gingival, rectal, and otter-associated seawater ASVs (Figure 2D)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+Set paths and load phyloseq object (wild sea otter dataset)
+
+```{r}
+#path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+#physeq <- readRDS(path, "physeq_lane1.rds")
+path <- file.path("/Users/natasha/Desktop/so_github")
+physeq <- readRDS("/Users/natasha/Documents/Research/relman-lab/docker_access/sea_otter/vPaper/physeq_dec18.rds")
+
+```
+
+Set working directory
+
+```{r}
+setwd(path)
+getwd()
+```
+
+Load libraries
+
+```{r}
+library("ggplot2"); packageVersion("ggplot2")
+library("phyloseq"); packageVersion("phyloseq")
+library("plyr"); packageVersion("plyr")
+library("nVennR"); packageVersion("nVennR")
+```
+
+ggplot2 package theme set
+
+```{r}
+theme_set(theme_bw())
+```
+
+Filter out non-relevant samples   
+- Select only wild sea otters (facility = CDFW)  
+- Select only one sample per individual sea otter and sample type   
+- Select only gingival, rectal, and seawater samples
+
+```{r}
+physeq <- subset_samples(physeq, facility == "CDFW") 
+physeq <- subset_samples(physeq, duplicate_capture == "no")
+physeq <- subset_samples(physeq, sample_type != "fecal")
+```
+
+How many of each sample type do we have?
+
+```{r}
+table(sample_data(physeq)$sample_type)
+```
+
+Remove ASVs that do not appear more than 5 times in at least 1% of samples. This helps protect against ASVs with small mean & trivially large C.V.   
+
+```{r}
+temp = genefilter_sample(physeq, filterfun_sample(function(x) x > 5), A=0.01*nsamples(physeq))
+physeq_filtered = prune_taxa(temp, physeq)
+```
+
+Perform MDS ordination using four diversity metrics  
+These metrics were selected such that all combinations of the following characteristics are accounted for:  
+a) Presence/absence only, b) relative abundance  
+a) Phylogenetically uniformed, b) phylogenetically informed  
+
+```{r}
+
+dist_methods = c("jaccard","unifrac","bray","wunifrac")
+
+plist <- vector("list", length(dist_methods))
+names(plist) = dist_methods
+
+
+for( i in dist_methods ){
+    iDist <- distance(physeq_filtered, method=i)
+    iMDS  <- ordinate(physeq_filtered, "MDS", distance=iDist)
+ 	evals <- iMDS$values$Eigenvalues
+    p <- NULL
+    p <- plot_ordination(physeq_filtered, iMDS, color="sample_type") +
+  coord_fixed(sqrt(evals[2] / evals[1]))
+    plist[[i]] = p
+}
+
+df = ldply(plist, function(x) x$data)
+names(df)[1] <- "distance"
+p = ggplot(df, aes(Axis.1, Axis.2, color=sample_type))
+p = p + geom_point(size=1, alpha=0.7)
+p = p + facet_wrap(~distance, scales="free")
+p = p + scale_color_manual(values = c("#4fc657", "#ba7d28", "#269af2"))
+p
+```
+
+Regardless of distance metric, samples of different types appear to be fairly distinct. For the main manuscript, print a figure using only the unifrac distance metric and scale axes to proportion of variance explained.
+
+```{r}
+physeq_filtered.ord <- ordinate(physeq_filtered, "MDS", "unifrac")
+
+evals <- physeq_filtered.ord$values$Eigenvalues
+
+p2 = plot_ordination(physeq_filtered, physeq_filtered.ord, color="sample_type") +
+  coord_fixed(sqrt(evals[2] / evals[1]))
+  
+p2 = p2 + scale_color_manual(values = c("#4fc657", "#ba7d28", "#269af2"))
+ggsave('Fig2C.pdf', plot = p2) 
+p2
+```
+
+Now we plot the Venn diagram showing sets of ASVs in gingival, rectal, and seawater samples. 
+
+Use phyloseq object before filtering to remove ASVs that do not appear more than 5 times in at least 1% of samples. Instead we will just remove ASVs with zero reads.
+
+```{r}
+physeq = filter_taxa(physeq, function(x) sum(x) > 0, TRUE)
+```
+
+Select only sea otters for whom there is a gingival, rectal, and adjacent seawater sample  
+i.e. whose BRD number shows up three times (remember there is a max of only one of each sample type per sea otter)
+
+```{r}
+brd_list <- sample_data(physeq)$brd_number
+count_brds <- table(brd_list)
+keeper_brds <- names(count_brds)[count_brds == 3]
+venn_physeq <- subset_samples(physeq, brd_number %in% keeper_brds) 
+```
+
+How many sea otters have samples meeting these criteria?
+
+```{r}
+length(names(count_brds)[count_brds == 3])
+```
+
+Select only sea otters for which all three samples were collected on the same day
+
+```{r}
+day <- sample_data(venn_physeq)$day_captured
+month <- sample_data(venn_physeq)$month_captured
+year <- sample_data(venn_physeq)$year_captured
+
+u_keeper_brds <- unique(keeper_brds)
+strict_keepers <- c()
+for (i in u_keeper_brds){
+    temp_physeq <- subset_samples(venn_physeq, brd_number == i) 
+    
+    day <- sample_data(temp_physeq)$day_captured
+    month <- sample_data(temp_physeq)$month_captured
+    year <- sample_data(temp_physeq)$year_captured
+    
+    if ((!(NA %in% day)) & (!(NA %in% month)) & (!(NA %in% year)) & (length(unique(day)) == 1) & (length(unique(month)) == 1) & (length(unique(year)) == 1)){
+        strict_keepers <- append(strict_keepers, i)   
+    } 
+}
+
+venn_physeq <- subset_samples(physeq, brd_number %in% strict_keepers) 
+```
+
+How many sea otters are we looking at now?
+
+```{r}
+length(strict_keepers)
+```
+
+Rarify samples with replacement - need equal sampling depth  
+Note: trimOTUs function removes all OTUs not present in the rarified dataset after subsampling
+
+```{r}
+min(sample_sums(venn_physeq))
+rarified_physeq <- rarefy_even_depth(venn_physeq, sample.size = min(sample_sums(venn_physeq)), rngseed = 290518, replace = TRUE, trimOTUs = TRUE, verbose = TRUE)
+```
+
+Sampling depth
+
+```{r}
+unique(sample_sums(rarified_physeq))
+```
+
+Number of ASVs found in all samples
+
+```{r}
+total_num <- ntaxa(rarified_physeq)
+total_num
+```
+
+Number of ASVs found in rectal samples ONLY
+
+```{r}
+oral_water <- subset_samples(rarified_physeq, sample_type == "oral" | sample_type == "water")
+oral_water = filter_taxa(oral_water, function(x) sum(x) > 0, TRUE)
+num_rectal_only <- total_num - ntaxa(oral_water)
+num_rectal_only
+```
+
+Number of ASVs found in oral samples ONLY
+
+```{r}
+rectal_water <- subset_samples(rarified_physeq, sample_type == "rectal" | sample_type == "water")
+rectal_water = filter_taxa(rectal_water, function(x) sum(x) > 0, TRUE)
+num_oral_only <- total_num - ntaxa(rectal_water)
+num_oral_only
+```
+
+Number of ASVs found in water samples ONLY
+
+```{r}
+oral_rectal <- subset_samples(rarified_physeq, sample_type == "rectal" | sample_type == "oral")
+oral_rectal = filter_taxa(oral_rectal, function(x) sum(x) > 0, TRUE)
+num_water_only <- total_num - ntaxa(oral_rectal)
+num_water_only
+```
+
+Number of ASVs shared by rectal and oral samples only 
+
+```{r}
+water <- subset_samples(rarified_physeq, sample_type == "water")
+water = filter_taxa(water, function(x) sum(x) > 0, TRUE)
+num_water <- ntaxa(water)
+num_shared_oral_rectal = total_num - num_water - num_oral_only - num_rectal_only 
+num_shared_oral_rectal
+```
+
+Number of ASVs shared by oral and water samples only
+
+```{r}
+rectal <- subset_samples(rarified_physeq, sample_type == "rectal")
+rectal = filter_taxa(rectal, function(x) sum(x) > 0, TRUE)
+num_rectal <- ntaxa(rectal)
+num_shared_oral_water = total_num - num_rectal - num_oral_only - num_water_only 
+num_shared_oral_water
+```
+
+Number of ASVs found in rectal and water samples only 
+
+```{r}
+oral <- subset_samples(rarified_physeq, sample_type == "oral")
+oral = filter_taxa(oral, function(x) sum(x) > 0, TRUE)
+num_oral <- ntaxa(oral)
+num_shared_rectal_water = total_num - num_oral - num_water_only - num_rectal_only 
+num_shared_rectal_water
+```
+
+Number of ASVs found in all three sample types
+
+```{r}
+num_shared = total_num - num_oral_only - num_rectal_only - num_water_only - num_shared_oral_rectal - num_shared_oral_water - num_shared_rectal_water
+num_shared
+```
+
+Now make the Venn diagram -- adjust labels later in Inkscape.
+
+```{r}
+myV3 <- createVennObj(nSets = 3, sSizes = c(rep(1, 7)))
+
+myV3 <- setVennRegion(myV3, region = c("Group1"), value = as.numeric(num_oral_only[1]))
+myV3 <- setVennRegion(myV3, region = c("Group2"), value = as.numeric(num_rectal_only[1]))
+myV3 <- setVennRegion(myV3, region = c("Group3"), value = as.numeric(num_water_only[1]))
+
+myV3 <- setVennRegion(myV3, region = c("Group1","Group2"), value = as.numeric(num_shared_oral_rectal[1]))
+myV3 <- setVennRegion(myV3, region = c("Group1","Group3"), value = as.numeric(num_shared_oral_water[1]))
+myV3 <- setVennRegion(myV3, region = c("Group2","Group3"), value = as.numeric(num_shared_rectal_water[1]))
+
+myV3 <- setVennRegion(myV3, region = c("Group1","Group2","Group3"), as.numeric(num_shared[1]))
+
+myV3 <- plotVenn(nVennObj = myV3)
+showSVG(myV3, setColors = c("#4fc657", "#ba7d28", "#269af2"), opacity = 0.1, borderWidth = 3, fontScale = 2, outFile="Fig2D.svg")
+```
