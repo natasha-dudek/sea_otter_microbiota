@@ -31,9 +31,9 @@ Load libraries
 
 ```{r}
 library("ggplot2"); packageVersion("ggplot2")
-library("phyloseq"); packageVersion("phyloseq")
-library("plyr"); packageVersion("plyr")
 library("nVennR"); packageVersion("nVennR")
+library("plyr"); packageVersion("plyr")
+library("phyloseq"); packageVersion("phyloseq")
 ```
 
 ggplot2 package theme set
@@ -58,6 +58,8 @@ How many of each sample type do we have?
 ```{r}
 table(sample_data(physeq)$sample_type)
 ```
+
+## Ordinate
 
 Remove ASVs that do not appear more than 5 times in at least 1% of samples. This helps protect against ASVs with small mean & trivially large C.V.   
 
@@ -113,7 +115,7 @@ ggsave('Fig2C.pdf', plot = p2)
 p2
 ```
 
-Now we plot the Venn diagram showing sets of ASVs in gingival, rectal, and seawater samples. 
+## Plot the Venn diagram showing sets of ASVs in gingival, rectal, and seawater samples
 
 Use phyloseq object before filtering to remove ASVs that do not appear more than 5 times in at least 1% of samples. Instead we will just remove ASVs with zero reads.
 
