@@ -1,0 +1,294 @@
+---
+title: "MBA diet shift experiment"
+author: "Natasha Dudek"
+date: "6/11/2019"
+output: html_document
+---
+
+Diet at the level of carnivore versus omnivore versus herbivore plays a major role in structuring the microbiota of terrestrial mammals (Ley et al., 2008). The extent to which subtle variations within one of these diets has an impact is less well understood, especially in non-human mammals. 
+
+We performed a controlled diet shift experiment in six captive sea otters residing at the Monterey Bay Aquarium (MBA). These sea otters normally are fed a diet consisting of fixed quantities of surf clam tongue, whole surf clam, squid, and shrimp, scaled to body weight. We introduced a short-term diet intervention shift where individual sea otters (n = 6) were fed only shrimp (n = 3) or only surf clam tongue (n = 3) for three days. Gingival and rectal swab samples were obtained for each sea otter during routine, bi-annual examinations under anesthesia, with a baseline sample collected ~6 months (the closest time) prior to the dietary intervention shift for each sea otter and another immediately after the shift.
+
+We begin by setting paths and loading phyloseq objects. Note we will need the species comparison phyloseq object because we will include two old samples from sea otters 5398 (Gidget) and 5678 (Kit) ("old" meaning opportunistically acquired prior to the diet shift experiment). These samples were all sequenced on lane 2.
+
+```{r set-paths}
+path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+physeq <- readRDS(path, "physeq_mba_diet.rds") # main physeq object we will work with
+physeq_spp <- readRDS(path, "physeq_spp_compare.rds") # will grab samples from two sea otters
+```
+
+Load libraries
+
+```{r load-libraries}
+library("DESeq2"); packageVersion("DESeq2")
+library("ggplot2"); packageVersion("ggplot2")
+library("phyloseq"); packageVersion("phyloseq")
+library("plyr"); packageVersion("plyr")
+```
+
+ggplot2 package theme set
+
+```{r}
+theme_set(theme_bw())
+```
+
+Merge samples we need from physeq_spp with the main physeq object
+
+```{r}
+temp <- subset_samples(physeq_spp, SampleID == "gidgetA.rectal" | SampleID == "kit.5.29.14v2")
+physeq_extra <- merge_phyloseq(physeq, temp)
+```
+
+Work only with rectal samples
+
+```{r}
+physeq_r <- subset_samples(physeq, sample_type == "rectal")
+physeq_extra_r <- subset_samples(physeq_extra, sample_type == "rectal")
+```
+
+How many samples, ASVs, and reads are there in the full sequenced dataset, respectively?
+
+```{r}
+physeq_r = filter_taxa(physeq_r, function(x) sum(x) > 0, TRUE)
+nsamples(physeq_r)
+ntaxa(physeq_r)
+sum(sample_sums(physeq_r))
+```
+
+Let's see what kind of data we have
+
+```{r}
+table(sample_data(physeq_r)$pre_post)
+table(sample_data(physeq_r)$pre_post2)
+table(sample_data(physeq_r)$brd_number)
+```
+
+## Ordinate
+
+We will working with the phyloseq object which has additional, opportunistically collected samples (pre diet shift study) from sea otters 5398 and 5678
+
+Perform ordination using four diversity metrics. These metrics were selected such that all combinations of the following characteristics are accounted for:  
+a) Presence/absence only, b) relative abundance  
+a) Phylogenetically uniformed, b) phylogenetically informed  
+
+Note that these ordinations will require some cleaning up in an editor (e.g.: Inkscape) to create Figure S3.
+
+```{r}
+physeq_extra_r = filter_taxa(physeq_extra_r, function(x) sum(x) > 0, TRUE)
+nsamples(physeq_extra_r)
+ntaxa(physeq_extra_r)
+sum(sample_sums(physeq_extra_r))
+```
+
+Weighted unifrac
+
+```{r wunifrac-ordination-only}
+physeq_extra_r.ord <- ordinate(physeq_extra_r, "MDS", "wunifrac")
+evals <- physeq_extra_r.ord$values$Eigenvalues
+p = plot_ordination(physeq_extra_r, physeq_extra_r.ord, type="biplot", color="pre_post", label="Species",
+                  shape="brd_number") +
+  coord_fixed(sqrt(evals[2] / evals[1])) +
+  labs(col = "pre_post", shape = "brd_number")
+p = p + geom_point(size=1)
+p = p + scale_color_manual(values = c("#9a9c9e", "#ffb600", "#F48153", "#caa5ff", "#83D3D4", "#000099", "#CC0066"))
+p = p + scale_shape_manual(values=c(19, 0, 8, 19, 25, 7, 5))
+p
+ggsave('FigS3A.pdf', plot = p) 
+
+```
+
+Unweighted unifrac
+
+```{r unifrac-ordination-only}
+physeq_extra_r.ord <- ordinate(physeq_extra_r, "MDS", "unifrac")
+evals <- physeq_extra_r.ord$values$Eigenvalues
+p = plot_ordination(physeq_extra_r, physeq_extra_r.ord, type="biplot", color="pre_post", label="Species",
+                  shape="brd_number") +
+  coord_fixed(sqrt(evals[2] / evals[1]))
+  
+p = p + geom_point(size=1)
+p = p + scale_color_manual(values = c( "#9a9c9e", "#000000", "#ffb600", "#F48153", "#caa5ff", "#83D3D4", "#000099", "#CC0066"))
+p = p + scale_shape_manual(values=c(19, 0, 8, 19, 25, 7, 5))
+p
+ggsave('FigS3B.pdf', plot = p) 
+```
+
+Bray-Curtis
+
+```{r bray-ordination-only}
+physeq_extra_r.ord <- ordinate(physeq_extra_r, "MDS", "bray")
+evals <- physeq_extra_r.ord$values$Eigenvalues
+p = plot_ordination(physeq_extra_r, physeq_extra_r.ord, type="biplot", color="pre_post", label="Species",
+                  shape="brd_number") +
+  coord_fixed(sqrt(evals[2] / evals[1])) #+
+  labs(col = "pre_post", shape = "brd_number")
+p = p + geom_point(size=1)
+p = p + scale_color_manual(values = c("#9a9c9e", "#ffb600", "#F48153", "#caa5ff", "#83D3D4", "#000099", "#CC0066"))
+p = p + scale_shape_manual(values=c(19, 0, 8, 19, 25, 7, 5))
+p
+ggsave('FigS3C.pdf', plot = p) 
+
+```
+
+Jaccard
+
+```{r jaccard-ordination-only}
+physeq_extra_r.ord <- ordinate(physeq_extra_r, "MDS", "jaccard")
+evals <- physeq_extra_r.ord$values$Eigenvalues
+p = plot_ordination(physeq_extra_r, physeq_extra_r.ord, type="biplot", color="pre_post", label="Species",
+                  shape="brd_number") +
+  coord_fixed(sqrt(evals[2] / evals[1])) #+
+  labs(col = "pre_post", shape = "brd_number")
+p = p + geom_point(size=1)
+p = p + scale_color_manual(values = c("#9a9c9e", "#ffb600", "#F48153", "#caa5ff", "#83D3D4", "#000099", "#CC0066"))
+p = p + scale_shape_manual(values=c(19, 0, 8, 19, 25, 7, 5))
+p
+ggsave('FigS3D.pdf', plot = p) 
+
+```
+
+Overall we see a shift post-diet intervention towards the more negative scores on axis 1. Our small pilot study us unable to exclude whether this shift may have been due to non-diet related environmental changes. But it is worth nothing that the shifts pre- and post- diet shift, which occurred over a period of six months, were similar in magnitude to those that occurred in the microbiotas of sea otters 5678 and 5398 of over the course of the four and two years, respectively.
+
+
+## Differential abundance analsysis
+
+We will now investigate which ASVs were differentially abundant pre- and post- diet intervention.
+
+Note: pre_post2 column in mapping file has general categories "pre" and "post" rather than "post_sct" and "post_shr"
+
+```{r dseq}
+diagdds = phyloseq_to_deseq2(physeq_r, ~ pre_post2)
+
+# calculate geometric means prior to estimate size factors
+gm_mean = function(x, na.rm=TRUE){
+  exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
+}
+geoMeans = apply(counts(diagdds), 1, gm_mean)
+diagdds = estimateSizeFactors(diagdds, geoMeans = geoMeans)
+
+diagdds = DESeq(diagdds, test="Wald", fitType="parametric")
+```
+
+Investigate the results table  
+Order by the adjusted p-value, remove entries with an NA value or p-value >= 0.01  
+Note: use contrast to set order of comparison. Positive log2fold change means the ASV is more abundant in sea otter rather than naro samples, negative means vice versa.
+
+```{r investigate-deseq2-results}
+# use contrast to set order of comparisons
+res = results(diagdds, contrast=c("pre_post2","pre", "post"), cooksCutoff = FALSE)
+alpha = 0.01
+sigtab = res[which(res$padj < alpha), ]
+sigtab = cbind(as(sigtab, "data.frame"), as(tax_table(physeq_r)[rownames(sigtab), ], "matrix"))
+dim(sigtab)
+write.csv(sigtab, file = "pre_vs_post_deseq2_asv.csv")
+```
+
+Make plot showing ASVs that were significantly different between the two species
+
+```{r fig.height = 10, fig.width = 25}
+scale_fill_discrete <- function(palname = "Set1", ...) {
+    scale_fill_brewer(palette = palname, ...)
+}
+
+# Phylum order
+x = tapply(sigtab$log2FoldChange, sigtab$Phylum, function(x) max(x))
+x = sort(x, TRUE)
+sigtab$Phylum = factor(as.character(sigtab$Phylum), levels=names(x))
+
+# Genus order
+x = tapply(sigtab$log2FoldChange, sigtab$Genus, function(x) max(x))
+x = sort(x, TRUE)
+sigtab$Genus = factor(as.character(sigtab$Genus), levels=names(x))
+
+#ggplot(sigtab, aes(x=Genus, y=log2FoldChange, color=Phylum)) + geom_point(size=1) + 
+#  theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5))
+
+ggplot(sigtab, aes(x=Genus, y=log2FoldChange, color=Phylum)) + geom_point(size=3) + 
+  theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5), axis.text=element_text(size=20)) #+ coord_fixed(ratio = 0.25)
+```
+
+To complete Figure 4B, we will now get information needed to label 10 differentially abundant taxa on the PCoA ordination. To do so, I looked at the DESeq2 results file, manually selected the most differentially expressed ASVs, and entered them below.
+
+```{r plot-diet-shift-fig}
+asvs_of_interest = c('GCAAGCGTTATCCGGATTTATTGGGCGTAAAGCGCGTCTAGGCGGAAAAGTAAGTCTGATGTGAAAATGCGGGGCTCAACTCCGTATTGCGTTGGAAACTGCTTTTCTAGAGTACTGGAGAGGTGGGCGGAACTACAAGTGTAGAGGTGAAATTCGTAGATATTTGTAGGAATGCCGATGGAGAAGTCAGCTCACTGGACAGATACTGACGCTGAAGCGCGAAAGCGTGGGGAGC', 'GCAAGCGTTATCCGGATTTATTGGGCGTAAAGCGCGTCTAGGCGGATTCATAAGTCTGATGTTAAAATGCGGGGCTCAACTCCGTATTGCGTTGGAAACTGTGAATCTAGAGTATCAGAGAGGTGGGCGGAACTACAAGTGTAGAGGTGAAATTCGTAGATATTTGTAGGAATGCCGATGGAGAAGTCAGCTCACTGGATGAATACTGACGCTAAAGCGCGAAAGCGTGGGTAGC', 'GCAAGCGTTACTCGGAATCACTGGGCGTAAAGAGCGCGTAGGCGGAAAAGTCAGTCAGATGTGAAATCCTGTAGCTTAACTACAGAACTGCATTTGAAACTACTTTTCTAGAGTATGGGAGAGGCAGGTGGAATTCTTGGTGTAGGGGTAAAATCCGTAGAGATCAAGAGGAATACTCATTGCGAAGGCGACCTGCTGGAACATTACTGACGCTGATGCGCGAAAGCGTGGGGAG', 'GCAAGCGTTATCCGGATTTATTGGGCGTAAAGCGCGTCTAGGCGGAAAAGAAAGTCTGATGTTAAAATGCGGGGCTCAACTCCGTATTGCGTTAGAAACTGCTTTTCTAGAGTACTGGAGAGGTGGGCGGAACTACAAGTGTAGAGGTGAAATTCGTAGATATTTGTAGGAATGCCGATGGAGAAGTCAGCTCACTGGACAGATACTGACGCTAAAGCGCGAAAGCGTGGGGAGC', 'GCAAGCGTTATCCGGATTTATTGGGCGTAAAGCGCGTCTAGGCGGAAAAGTAAGTCTGATGTGAAAATGCGGGGCTTAACTCCGTATTGCGTTGGAAACTGCTTTTCTAGAGTACTGGAGAGGTGGGCGGAACTACAAGTGTAGAGGTGAAATTCGTAGATATTTGTAGGAATGCCGATGGAGAAGTCAGCTCACTGGACAGATACTGACGCTGAAGCGCGAAAGCGTGGGGAGC', 'GCAAGCGTTATCCGGATTTACTGGGTGTAAAGGGTGAGTAGGCGGTTATGCAAGTCATATGTGAAATTCTGGGGCTCAACCTCAGAGCTGCATAAGAAACTGTGTAACTAGAGTACAGGAGAGGTAAGCGGAATTCCTAGTGTAGCGGTGAAATGCGTAGATATTAGGAAGAACACCGGTGGCGAAGGCGGCTTACTGGACTGAAACTGACGCTGAGTCACGAAAGCGTGGGGAG', 'GCAAGCGTTATCCGGATTTATTGGGCGTAAAGCGCGTCTAGGCGGTTTGGTAAGTCTGATGTGAAAATGCGGGGCTCAACTCCGTATTGCGTTGGAAACTGCCAAACTAGAGTACTGGAGAGGTGGGCGGAACTACAAGTGTAGAGGTGAAATTCGTAGATATTTGTAGGAATGCCGATGGGGAAGCCAGCCCACTGGACAGATACTGACGCTAAAGCGCGAAAGCGTGGGTAGC', 'GCAAGCGTTACTCGGAATCACTGGGCGTAAGGAGCGCGTAGGCGGGAAAGTAAGTCAGATGTGAAATCCTGTAGCTTAACTACAGAATTGCATTTGAAACTACTTTTCTAGAGTATGGGAGAGGTAGGTGGAATTCTTGGTGTAGGGGTAAAATCCGTAGAGATCAAGAGGAATACTCATTGCGAAGGCGACCTGCTGGAACATTACTGACGCTGATGCGCGAAAGCGTGGGGAG', 'GCTAGCGTTATCCGGAATTACTGGGCGTAAAGGGTGCGTAGGTGGTTTCTTAAGTCAGAGGTGAAAGGCTACGGCTCAACCGTAGTAAGCCTTTGAAACTGAGAAACTTGAGTGCAGGAGAGGAGAGTAGAATTCCTAGTGTAGCGGTGAAATGCGTAGATATTAGGAGGAATACCAGTTGCGAAGGCGGCTCTCTGGACTGTAACTGACACTGAGGCACGAAAACGTGGGGAGC', 'GCAAGCGTTACTCGGAATCACTGGGCGTAAAGAGCGCGTAGGCGGGAAAGTCAGTCAGATGTGAAATCCTGTAGCTCAACTACAGAACTGCATTTGAAACTACTTTTCTAGAGTATGGGAGAGGCAGGTGGAATTCTTGGTGTAGGGGTAAAATCCGTAGAGATCAAGAGGAATACTCATTGCGAAGGCGACCTGCTGGAACATTACTGACGCTGATGCGCGAAAGCGTGGGGAG')
+
+# To select for these ASVs from tax_table
+# list from 1:n_taxa
+nums <- c(seq(1, ntaxa(physeq_extra_r), by=1))
+
+# relabel species names to be unique numbers 
+tax_table(physeq_extra_r)[,'Species'] <- nums
+
+# create labels
+idx_label = strtoi(tax_table(physeq_extra_r)[asvs_of_interest, 'Species'])
+x = rep('', ntaxa(physeq_extra_r))
+x[idx_label] = idx_label
+tax_table(physeq_extra_r)[,'Species'] <- x
+
+
+physeq_extra_r.ord <- ordinate(physeq_extra_r, "MDS", "unifrac")
+evals <- physeq_extra_r.ord$values$Eigenvalues
+p2 = plot_ordination(physeq_extra_r, physeq_extra_r.ord, type="biplot", color="pre_post", label="Species",
+                  shape="brd_number") +
+  coord_fixed(sqrt(evals[2] / evals[1]))
+  
+p2 = p2 + geom_point(size=1)
+p2 = p2 + scale_color_manual(values = c( "#9a9c9e", "#000000", "#ffb600", "#F48153", "#caa5ff", "#83D3D4", "#000099", "#CC0066"))
+p2 = p2 + scale_shape_manual(values=c(19, 0, 8, 19, 25, 7, 5))
+p2
+ggsave('Fig4B_numericLabels.pdf', plot = p2) 
+```
+
+To get which # is which AVS, use DESeq2 table + following command:
+tax_table(physeq_extra_r)['GCAAGCGTTATCCGGATTTATTGGGCGTAAAGCGCGTCTAGGCGGAAAAGTAAGTCTGATGTGAAAATGCGGGGCTCAACTCCGTATTGCGTTGGAAACTGCTTTTCTAGAGTACTGGAGAGGTGGGCGGAACTACAAGTGTAGAGGTGAAATTCGTAGATATTTGTAGGAATGCCGATGGAGAAGTCAGCTCACTGGACAGATACTGACGCTGAAGCGCGAAAGCGTGGGGAGC','Species']
+
+380 = cetobacterium   
+377 = cetobacterium   
+44 = helicobacter    
+382 = cetobacterium    
+378 = cetobacterium     
+45 = helicobacter    
+467 = romboutsia    
+35 = helicobacter    
+360 = Fusobacterium mortiferum    
+454 = clostridium    
+
+## Did microbiotas become more distinct on different diets post shift? 
+
+We will now plot and ordination of only pre samples and another of only post samples. Is after more structured by diet? Are individuals on the same diet more similar to each other than individuals on different diets?
+
+```{r pre-only}
+physeq_r_pre <- subset_samples(physeq_r, pre_post == "pre")
+physeq_r_pre <- filter_taxa(physeq_r_pre, function(x) sum(x) > 0, TRUE)
+
+physeq_r_pre.ord <- ordinate(physeq_r_pre, "MDS", "wunifrac")
+evals <- physeq_r_pre.ord$values$Eigenvalues
+p = plot_ordination(physeq_r_pre, physeq_r_pre.ord, shape="brd_number") +
+  					coord_fixed(sqrt(evals[2] / evals[1])) +
+  					labs(col = "pre_post", shape = "brd_number")
+p
+```
+
+```{r post-only}
+physeq_r_post <- subset_samples(physeq_r, pre_post == "post_sct" | pre_post == "post_shr" )
+physeq_r_post <- filter_taxa(physeq_r_post, function(x) sum(x) > 0, TRUE)
+
+physeq_r_post.ord <- ordinate(physeq_r_post, "MDS", "wunifrac")
+evals <- physeq_r_post.ord$values$Eigenvalues
+p = plot_ordination(physeq_r_post, physeq_r_post.ord, color="pre_post", shape="brd_number") +
+  					coord_fixed(sqrt(evals[2] / evals[1])) +
+  					labs(col = "pre_post", shape = "brd_number")
+p
+```
+
+In the pre PCoA, axis 1 explains more variance than in the post PCoA. 
+
+## Does microbial diversity decrease when diet diversity decreases?
+
+```{r diversity}
+alphaShannon = (estimate_richness(physeq_r, measures="Shannon"))
+alpha.stats <- cbind(alphaShannon, sample_data(physeq_r))
+kruskal.test(Shannon~pre_post2, data = alpha.stats)
+```
+
+We observe no significant difference in alpha diversity pre- and post- diet shift.
