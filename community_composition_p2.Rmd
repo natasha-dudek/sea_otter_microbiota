@@ -9,10 +9,6 @@ In this script we will:
 1. Plot an ordination of gingival, rectal, and otter-associated seawater samples (Figure 2C) and perform significance testing to determine whether the composition of sample types is distinct (Figure 2C)
 2. Plot a Venn diagram of sets of gingival, rectal, and otter-associated seawater ASVs (Figure 2D)
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 Set paths and load phyloseq object (wild sea otter dataset)
 
 ```{r}
