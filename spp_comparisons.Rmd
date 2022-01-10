@@ -1,0 +1,337 @@
+---
+title: "Compare the distal gut microbiota of different otter species"
+author: "Natasha Dudek"
+date: "6/11/2019"
+output: html_document
+---
+
+Major determinants of gut bacterial community structure among terrestrial animals include host diet, phylogeny, and gut morphology (Ley et al., 2008). To gain insight into whether and how the sea otter gut microbiota differs from those of closely related, non-marine otter species, we compared sea otter (wild and captive) gut communities to those of captive representatives of other species: North American river otters (Lontra canadensis), Asian small-clawed otters (Aonyx cinerea), and a giant otter (Pteronura brasiliensis). 
+
+More specifically, in this script we will:    
+- Plot ordinations of distal gut samples from different otter species (Figures 3, S3)    
+- Perform a bootstrap test to investigate whether the average Unifrac distance between distal gut   specimens within a species is significantly lower than the average distance between samples from sea otters vs North American river otters  
+- Perform differential abundance testing on sea otter vs North American river otter samples to probe how the composition of their microbiotas are distinct  
+
+Begin by setting paths and loading phyloseq object
+
+```{r}
+#path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+#physeq <- readRDS(path, "physeq_lane2_sppCompare.rds")
+#rmarkdown::render("/Users/natasha/Desktop/so_github/spp_comparisons.Rmd", clean=TRUE, output_format="html_document")
+
+setwd("/Users/natasha/Desktop/so_github")
+physeq <- readRDS("/Users/natasha/Documents/Research/relman-lab/docker_access/sea_otter/vPaper/mba_so/07-basic/physeq_spp_compare.rds")
+```
+
+Load libraries
+
+```{r load-libraries}
+library("DESeq2"); packageVersion("DESeq2")
+library("ggplot2"); packageVersion("ggplot2")
+library("phyloseq"); packageVersion("phyloseq")
+library("plyr"); packageVersion("plyr")
+library("vegan"); packageVersion("vegan")
+```
+
+ggplot2 package theme set
+
+```{r}
+theme_set(theme_bw())
+```
+
+Filter dataset to remove duplicate samples. Specifically:    
+- Due to past difficulties amplifying DNA in the giant sea otter sample, we tried amplifying DNA from four different extractions, each with different amounts of input material (this was an attempt to minimize the amount of PCR inhibitors in the sample). Luckily the Zymo columns did the trick and this wasn't a problem anymore. We will remove all duplicate extractions    
+- Nessie2 is a duplicate of Nessie's first sample       
+- We will include samples from captive sea otters that participated in the MBA diet study, but we will use only samples from before the diet intervention (e.g. Rosa had two rectal samples collected, one before and one after her diet shift - use the one from before)      
+- Note that samples X595.L and X595.rectal are from a sea otter included in the MBA diet shift experiment, and are therefore duplicates. 
+
+```{r filter-ds}
+physeq <- subset_samples(physeq, duplicate_capture != "yes")
+physeq <- subset_samples(physeq, SampleID != "X595.L")
+physeq <- subset_samples(physeq, SampleID != "X595.rectal")
+```
+
+How many samples, ASVs, and reads are there in the captive vs wild sea otter set (gingival + rectal)?
+```{r basic-stats}
+temp <- subset_samples(physeq, species == "sea_otter" & sample_type == "rectal" | sample_type == "oral")
+temp = filter_taxa(temp, function(x) sum(x) > 0, TRUE)
+nsamples(temp)
+ntaxa(temp)
+sum(sample_sums(temp))
+table(sample_data(temp)$sample_type)
+```
+
+## Compare the distal gut microbiota of four otter species
+
+Work only with rectal and fecal and stool samples (fecal and stool are the same thing here but were named differently in different branches of the study).
+
+```{r filter-gut-only}
+physeq_r <- subset_samples(physeq, sample_type == "rectal" | sample_type == "stool" | sample_type == "fecal")
+physeq_r = filter_taxa(physeq_r, function(x) sum(x) > 0, TRUE)
+sample_data(physeq_r)$sample_type <- gsub('stool', 'fecal', sample_data(physeq_r)$sample_type)
+```
+
+How many samples, ASVs, and reads are there in the species comparison dataset, respectively?
+
+```{r}
+nsamples(physeq_r)
+ntaxa(physeq_r)
+sum(sample_sums(physeq_r))
+table(sample_data(physeq_r)$sample_type)
+```
+
+Let's see what kind of data we have
+
+Looking at sea otters:
+
+```{r}
+sea_otter_captive  <- subset_samples(physeq_r, species == "sea_otter" & captive == "yes")
+sea_otter_wild  <- subset_samples(physeq_r, species == "sea_otter" & captive == "no")
+table(sample_data(sea_otter_wild)$sample_type)
+table(sample_data(sea_otter_captive)$sample_type)
+```
+
+Now lets look at other species:
+
+```{r}
+not_so  <- subset_samples(physeq_r, species != "sea_otter")
+table(sample_data(not_so)$sample_type)
+table(sample_data(not_so)$species)
+```
+We have only stool/fecal samples from three other lutrinidae species
+
+### Ordinate
+
+Merge ASVs at genus level
+
+```{r glom-genus}
+physeq_genus = tax_glom(physeq_r, taxrank=rank_names(physeq_r)[6])
+```
+
+Perform ordination using four diversity metrics. These metrics were selected such that all combinations of the following characteristics are accounted for:  
+a) Presence/absence only, b) relative abundance  
+a) Phylogenetically uniformed, b) phylogenetically informed  
+
+The following 4 figures will be compiled into Supplemental Figure 3.
+
+First use weighted unifrac distance metric
+
+```{r wunifrac-ordination-only}
+physeq_genus.ord <- ordinate(physeq_genus, "MDS", "wunifrac")
+evals <- physeq_genus.ord$values$Eigenvalues
+p = plot_ordination(physeq_genus, physeq_genus.ord, color="species",
+                  shape="sample_type") +
+  				  coord_fixed(sqrt(evals[2] / evals[1])) 
+p = p + geom_point(size=2)
+p = p + scale_color_manual(values = c("#ffb600", "#cc0000", "#caa5ff", "#0040ff"))
+p = p + scale_shape_manual(values=c(0, 19))
+p
+ggsave('FigS3A.pdf', plot = p) 
+```
+
+Now unweighted unifrac
+
+```{r unifrac-ordination-only}
+physeq_genus.ord <- ordinate(physeq_genus, "MDS", "unifrac")
+evals <- physeq_genus.ord$values$Eigenvalues
+p = plot_ordination(physeq_genus, physeq_genus.ord, color="species",
+                  shape="sample_type") +
+  				  coord_fixed(sqrt(evals[2] / evals[1]))
+p = p + geom_point(size=2)
+p = p + scale_color_manual(values = c("#ffb600", "#cc0000", "#caa5ff", "#0040ff"))
+p = p + scale_shape_manual(values=c(0, 19))
+p
+ggsave('FigS3B.pdf', plot = p) 
+```
+
+Now Bray-Curtis
+
+```{r bray-ordination-only}
+physeq_genus.ord <- ordinate(physeq_genus, "MDS", "bray")
+evals <- physeq_genus.ord$values$Eigenvalues
+p = plot_ordination(physeq_genus, physeq_genus.ord, color="species",
+                  shape="sample_type") +
+  				  coord_fixed(sqrt(evals[2] / evals[1]))
+p = p + geom_point(size=2)
+p = p + scale_color_manual(values = c("#ffb600", "#cc0000", "#caa5ff", "#0040ff"))
+p = p + scale_shape_manual(values=c(0, 19))
+p
+ggsave('FigS3C.pdf', plot = p) 
+```
+
+Now Jaccard
+
+```{r jaccard-ordination-only}
+physeq_genus.ord <- ordinate(physeq_genus, "MDS", "jaccard")
+evals <- physeq_genus.ord$values$Eigenvalues
+p = plot_ordination(physeq_genus, physeq_genus.ord, color="species",
+                  shape="sample_type") +
+ 				  coord_fixed(sqrt(evals[2] / evals[1])) 
+p = p + geom_point(size=2)
+p = p + scale_color_manual(values = c("#ffb600", "#cc0000", "#caa5ff", "#0040ff"))
+p = p + scale_shape_manual(values=c(0, 19))
+p
+ggsave('FigS3D.pdf', plot = p) 
+```
+
+Samples from sea otters vs non-marine otters appear to be quite distinct. This is especially pronounced when using the unifrac distance metric. Print two versions of this metric highlighting whether samples are a) from captive animals, b) rectal vs fecal. And a third showing sample collection year for wild sea otters.
+
+```{r unifrac-ordination-fancy}
+physeq_genus.ord <- ordinate(physeq_genus, "MDS", "unifrac")
+evals <- physeq_genus.ord$values$Eigenvalues
+p = plot_ordination(physeq_genus, physeq_genus.ord, color = "species",
+                  shape = "captive") +
+  				  coord_fixed(sqrt(evals[2] / evals[1])) 
+p = p + geom_point(size=2)
+p = p + scale_color_manual(values = c("#ffb600", "#cc0000", "#caa5ff", "#0040ff"))
+p = p + scale_shape_manual(values=c(0, 19))
+p
+ggsave('Fig4A.pdf', plot = p) 
+
+p = plot_ordination(physeq_genus, physeq_genus.ord, color = "species",
+                  shape = "sample_type") +
+  				  coord_fixed(sqrt(evals[2] / evals[1])) 
+p = p + geom_point(size=2)
+p = p + scale_color_manual(values = c("#ffb600", "#cc0000", "#caa5ff", "#0040ff"))
+p = p + scale_shape_manual(values=c(0, 19))
+p
+ggsave('Fig4B.pdf', plot = p) 
+
+sample_data(physeq_genus)$year_sampled[sample_data(physeq_genus)$year_sampled  == "18"]  <-  "2018"
+
+physeq_genus.ord <- ordinate(physeq_genus, "MDS", "unifrac")
+evals <- physeq_genus.ord$values$Eigenvalues
+p = plot_ordination(physeq_genus, physeq_genus.ord, color="year_sampled",
+                  shape="captive", label="year_sampled") +
+  				  coord_fixed(sqrt(evals[2] / evals[1]))
+p = p + geom_point(size=2)
+p = p + scale_color_manual(values = c("#ffcc00", "#6bb0f1", "#64a4e0", "#5c97d0", "#558cc1", "#4d80b1", "#4675a3", "#3f6a93", "#385d83", "#315277", "#2b4967", "#243d5a", "#1e344c"))
+p = p + scale_shape_manual(values=c(19, 17))
+p
+ggsave('Fig4C.pdf', plot = p) 
+```
+
+### Is the sea otter microbiota significantly different from that of the North American river otter?  
+
+Based on the ordinations, it appears that the sea otter microbiota is distinct from that of the three other otter species. Since we have limited sample sizes of the distal gut microbiota of Giant otters and Small-clawed Asian otters, from here on we'll just focus on comparing sea otters and North American river otters. First off, is there a statistically significant difference between the gut microbiotas of these species? Let's do a permanova.
+
+```{r permanova_species}
+so_physeq <- subset_samples(physeq_genus, species == "sea_otter" | species == "north_american_river_otter")
+so_physeq <- subset_samples(so_physeq, sample_type == "fecal")
+so_physeq = filter_taxa(so_physeq, function(x) sum(x) > 0, TRUE)
+table(sample_data(so_physeq)$species)
+physeq
+
+dist_mat <- phyloseq::distance(so_physeq, method = "unifrac")
+sampledf <- data.frame(sample_data(so_physeq))
+adonis2(dist_mat ~ species, data = sampledf, method="unifrac", by="terms")  
+
+beta <- betadisper(dist_mat, sampledf$species)
+permutest(beta)
+``` 
+
+Permanova suggests there is a statistically difference, although it is important to note that the dispersions per species differed.
+
+### Which genera are differentially abundant between sea otter and NARO fecal samples?
+
+Perform differential abundance testing to determine which genera are driving this difference.
+
+```{r differential-abudance-analysis}
+diagdds = phyloseq_to_deseq2(so_physeq, ~ species)
+
+# calculate geometric means prior to estimate size factors
+gm_mean = function(x, na.rm=TRUE){
+  exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
+}
+geoMeans = apply(counts(diagdds), 1, gm_mean)
+diagdds = estimateSizeFactors(diagdds, geoMeans = geoMeans)
+diagdds = DESeq(diagdds, test="Wald", fitType="parametric")
+```
+
+Investigate the results table  
+Order by the adjusted p-value, remove entries with an NA value or p-value >= 0.01  
+Note: use contrast to set order of comparison. Positive log2fold change means the ASV is more abundant in sea otter rather than naro samples, negative means vice versa.
+
+```{r investigate-deseq2-results2}
+# use contrast to set order of comparisons
+res = results(diagdds, contrast=c("species","sea_otter","north_american_river_otter"), cooksCutoff = FALSE)
+alpha = 0.01
+sigtab = res[which(res$padj < alpha), ]
+sigtab = cbind(as(sigtab, "data.frame"), as(tax_table(so_physeq)[rownames(sigtab), ], "matrix"))
+dim(sigtab)
+write.csv(sigtab, file = "naro_vs_so_deseq2_genus.csv")
+```
+
+Make plot showing ASVs that were significantly different between the two species
+
+```{r fig.height = 10, fig.width = 25}
+scale_fill_discrete <- function(palname = "Set1", ...) {
+    scale_fill_brewer(palette = palname, ...)
+}
+
+# Phylum order
+x = tapply(sigtab$log2FoldChange, sigtab$Phylum, function(x) max(x))
+x = sort(x, TRUE)
+sigtab$Phylum = factor(as.character(sigtab$Phylum), levels=names(x))
+
+# Genus order
+x = tapply(sigtab$log2FoldChange, sigtab$Genus, function(x) max(x))
+x = sort(x, TRUE)
+sigtab$Genus = factor(as.character(sigtab$Genus), levels=names(x))
+ggplot(sigtab, aes(x=Genus, y=log2FoldChange, color=Phylum)) + geom_point(size=3) + 
+  theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5), axis.text=element_text(size=20))
+```
+
+## Investigate effect of distal gut sample type (rectal vs fecal)
+
+Elsewhere it has been reported that distal gut sample type (rectal vs fecal) influences community composition, as each sampling method samples a different niche / community within the gut. Do we see that here?
+
+```{r permanova_sample_type}
+so_physeq <- subset_samples(physeq_genus, species == "sea_otter", captive="no")
+dist_mat <- phyloseq::distance(so_physeq, method = "unifrac")
+sampledf <- data.frame(sample_data(so_physeq))
+adonis2(dist_mat ~ sample_type , data = sampledf, method="unifrac")  
+beta <- betadisper(dist_mat, sampledf$sample_type)
+permutest(beta)
+```  
+As expected from the literature, collection method of distal gut samples is statistically significant.
+
+## Investigate effect of captivity
+
+Does captivity alter the microbiota of sea otters in this study? Work only with rectal samples to avoid sample type as a  confounding factor.
+
+```{r permanova_captivity_rectal}
+so_physeq <- subset_samples(physeq_genus, species == "sea_otter" & sample_type == "rectal")
+so_physeq = filter_taxa(so_physeq, function(x) sum(x) > 0, TRUE)
+dist_mat <- phyloseq::distance(so_physeq, method = "unifrac")
+sampledf <- data.frame(sample_data(so_physeq))
+adonis2(dist_mat ~ captive, data = sampledf, method="unifrac")  
+beta <- betadisper(dist_mat, sampledf$captive)
+permutest(beta)
+```  
+
+Now repeat for gingival samples
+
+```{r filter-gingival}
+physeq_gingival <- subset_samples(physeq, sample_type == "oral" & species == "sea_otter")
+physeq_gingival = filter_taxa(physeq_gingival, function(x) sum(x) > 0, TRUE)
+nsamples(physeq_gingival)
+ntaxa(physeq_gingival)
+sum(sample_sums(physeq_gingival))
+table(sample_data(physeq_gingival)$captive)
+``` 
+
+Merge gingival ASVs at the genus level
+
+```{r gingival-genus-glom}
+physeq_gingival_genus = tax_glom(physeq_gingival, taxrank=rank_names(physeq_gingival)[6])
+``` 
+
+```{r permanova_captivity_gingival}
+dist_mat <- phyloseq::distance(physeq_gingival_genus, method = "unifrac")
+sampledf <- data.frame(sample_data(physeq_gingival_genus))
+adonis2(dist_mat ~ captive, data = sampledf, method="unifrac")  
+beta <- betadisper(dist_mat, sampledf$captive)
+permutest(beta)
+```  
+In our study population, captivity does not have a significant effect on sea otter bacterial communities. 
