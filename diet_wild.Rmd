@@ -14,7 +14,7 @@ Begin by setting paths + working directory and loading phyloseq object
 path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
 setwd(path)
 getwd()
-physeq <- readRDS(path, "physeq_lane1.rds")
+physeq <- readRDS("physeq_lane1.rds")
 ```
 
 Load libraries
@@ -22,7 +22,6 @@ Load libraries
 ```{r load-libraries}
 library("ggplot2"); packageVersion("ggplot2")
 library("phyloseq"); packageVersion("phyloseq")
-library("plyr"); packageVersion("plyr")
 ```
 
 ggplot2 package theme set
@@ -37,7 +36,7 @@ Filter dataset. We want:
 - Gingival, rectal, and seawater samples for each sea otter  
 - Remove ASVs with zero reads
 
-```{r}
+```{r filter-ds}
 physeq <- subset_samples(physeq, facility == "CDFW") 
 physeq <- subset_samples(physeq, duplicate_capture == "no")
 physeq_r <- subset_samples(physeq, sample_type == "rectal")
@@ -54,7 +53,7 @@ table(sample_data(physeq_r)$primary_phylum)
 
 Now prune rare taxa by removing OTUs that do not show appear more than 3 times in more than 5% of the samples. This protects against an OTU with small mean & trivially large C.V.
 
-```{r}
+```{r prune-rare-taxa}
 temp = genefilter_sample(physeq_r, filterfun_sample(function(x) x > 3), A=0.05*nsamples(physeq_r))
 physeq_r = prune_taxa(temp, physeq_r)
 ```
@@ -76,7 +75,7 @@ Perform ordination using four diversity metrics. These metrics were selected suc
 a) Presence/absence only, b) relative abundance  
 a) Phylogenetically uniformed, b) phylogenetically informed  
 
-```{r}
+```{r ordinate}
 
 dist_methods = c("jaccard","unifrac","bray","wunifrac")
 
