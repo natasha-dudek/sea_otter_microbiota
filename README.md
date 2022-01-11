@@ -9,7 +9,6 @@ Southern sea otters are a threatened keystone sub-species in coastal ecosystems.
 ### Installation
 
 For python script: pip install requirements.txt  
-For R scipts: coming soon...
 
 ### How to run
 
