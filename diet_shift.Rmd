@@ -9,10 +9,12 @@ Diet at the level of carnivore versus omnivore versus herbivore plays a major ro
 
 We performed a controlled diet shift experiment in six captive sea otters residing at the Monterey Bay Aquarium (MBA). These sea otters normally are fed a diet consisting of fixed quantities of surf clam tongue, whole surf clam, squid, and shrimp, scaled to body weight. We introduced a short-term diet intervention shift where individual sea otters (n = 6) were fed only shrimp (n = 3) or only surf clam tongue (n = 3) for three days. Gingival and rectal swab samples were obtained for each sea otter during routine, bi-annual examinations under anesthesia, with a baseline sample collected ~6 months (the closest time) prior to the dietary intervention shift for each sea otter and another immediately after the shift.
 
-We begin by setting paths and loading phyloseq objects. Note we will need the species comparison phyloseq object because we will include two old samples from sea otters 5398 (Gidget) and 5678 (Kit) ("old" meaning opportunistically acquired prior to the diet shift experiment). These samples were all sequenced on lane 2.
+Set paths + working directory and load phyloseq objects. Note we will need the species comparison phyloseq object because we will include two old samples from sea otters 5398 (Gidget) and 5678 (Kit) ("old" meaning opportunistically acquired prior to the diet shift experiment). These samples were all sequenced on lane 2.
 
 ```{r set-paths}
 path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+setwd(path)
+getwd()
 physeq <- readRDS(path, "physeq_mba_diet.rds") # main physeq object we will work with
 physeq_spp <- readRDS(path, "physeq_spp_compare.rds") # will grab samples from two sea otters
 ```
