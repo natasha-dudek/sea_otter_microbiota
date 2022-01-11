@@ -6,6 +6,15 @@ Dudek, N.K., Switzer, A.D., Costello, E.K., Murray, M.J., Tomoleoni, J.A., Staed
 
 Southern sea otters are a threatened keystone sub-species in coastal ecosystems. To understand better the role of diet, monitor health, and enhance management of this and other marine mammal species, we characterized the oral and distal gut microbiota of 158 wild southern sea otters (_Enhydra lutris nereis_) living off the coast of central California, USA, 13 captive sea otters (some of which participated in a diet shift experiment), and 17 otters from three other otter species.
 
+### Data
+
+Sequencing data for this project is available through NCBI BioProject PRJNA726636 (https://www.ncbi.nlm.nih.gov/bioproject/PRJNA726636/). Raw reads for the amplicon survey and the shotgun sequencing analysis were deposited to SRA and are associated with BioSamples SAMN19311023 - SAMN19311742. 
+
+For maximum reproducibility, the following phyloseq objects have been upload to the repo: 
+- physeq_lane1.rds represents all samples sequenced on lane 1. All analyses focused on the microbiota of wild sea otters use this phyloseq object. 
+- physeq_spp_compare.rds consists of samples sequenced on lane2. It is used for analyses focused on comparing the distal gut microbiota of different otter species.
+- physeq_mba_diet.rds consists of samples sequenced on lane2. It is used for analysis of the MBA diet shift experiment.
+
 ### Installation
 
 For python script: pip install requirements.txt  
