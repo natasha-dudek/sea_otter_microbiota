@@ -2,7 +2,7 @@
 
 This repository contains R version 3.6.1 and python version 3.7.6 implementations of analyses described in:
 
-Dudek, N.K., Switzer, A.D., Costello, E.K., Murray, M.J., Tomoleoni, J.A., Staedler, M.M., Tinker, M.T., Relman, D.A. Characterizing the microbiota of the threatened southern sea otter (_Enhydra lutris nereis_) to enhance conservation practice. Under review at Conservation Science and Practice (2022).
+Dudek, N.K., Switzer, A.D., Costello, E.K., Murray, M.J., Tomoleoni, J.A., Staedler, M.M., Tinker, M.T., Relman, D.A. Characterizing the microbiota of the threatened southern sea otter (_Enhydra lutris nereis_) to enhance conservation practice. In press at Conservation Science and Practice (2022).
 
 Southern sea otters are a threatened keystone sub-species in coastal ecosystems. To understand better the role of diet, monitor health, and enhance management of this and other marine mammal species, we characterized the oral and distal gut microbiota of 158 wild southern sea otters (_Enhydra lutris nereis_) living off the coast of central California, USA, 13 captive sea otters (some of which participated in a diet shift experiment), and 17 otters from three other otter species.
 
