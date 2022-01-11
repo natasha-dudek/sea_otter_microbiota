@@ -184,9 +184,9 @@ total_num
 Number of ASVs found in rectal samples ONLY
 
 ```{r n_asvs_rectal}
-oral_water <- subset_samples(rarified_physeq, sample_type == "oral" | sample_type == "water")
-oral_water = filter_taxa(oral_water, function(x) sum(x) > 0, TRUE)
-num_rectal_only <- total_num - ntaxa(oral_water)
+gingival_water <- subset_samples(rarified_physeq, sample_type == "oral" | sample_type == "water")
+gingival_water = filter_taxa(gingival_water, function(x) sum(x) > 0, TRUE)
+num_rectal_only <- total_num - ntaxa(gingival_water)
 num_rectal_only
 ```
 
@@ -195,16 +195,16 @@ Number of ASVs found in gingival samples ONLY
 ```{r n_asvs_gingival}
 rectal_water <- subset_samples(rarified_physeq, sample_type == "rectal" | sample_type == "water")
 rectal_water = filter_taxa(rectal_water, function(x) sum(x) > 0, TRUE)
-num_oral_only <- total_num - ntaxa(rectal_water)
-num_oral_only
+num_gingival_only <- total_num - ntaxa(rectal_water)
+num_gingival_only
 ```
 
 Number of ASVs found in water samples ONLY
 
 ```{r n_asvs_water}
-oral_rectal <- subset_samples(rarified_physeq, sample_type == "rectal" | sample_type == "oral")
-oral_rectal = filter_taxa(oral_rectal, function(x) sum(x) > 0, TRUE)
-num_water_only <- total_num - ntaxa(oral_rectal)
+gingival_rectal <- subset_samples(rarified_physeq, sample_type == "rectal" | sample_type == "oral")
+gingival_rectal = filter_taxa(gingival_rectal, function(x) sum(x) > 0, TRUE)
+num_water_only <- total_num - ntaxa(gingival_rectal)
 num_water_only
 ```
 
@@ -214,8 +214,8 @@ Number of ASVs shared by rectal and gingival samples only
 water <- subset_samples(rarified_physeq, sample_type == "water")
 water = filter_taxa(water, function(x) sum(x) > 0, TRUE)
 num_water <- ntaxa(water)
-num_shared_oral_rectal = total_num - num_water - num_oral_only - num_rectal_only 
-num_shared_oral_rectal
+num_shared_gingival_rectal = total_num - num_water - num_gingival_only - num_rectal_only 
+num_shared_gingival_rectal
 ```
 
 Number of ASVs shared by gingival and water samples only
@@ -224,24 +224,24 @@ Number of ASVs shared by gingival and water samples only
 rectal <- subset_samples(rarified_physeq, sample_type == "rectal")
 rectal = filter_taxa(rectal, function(x) sum(x) > 0, TRUE)
 num_rectal <- ntaxa(rectal)
-num_shared_oral_water = total_num - num_rectal - num_oral_only - num_water_only 
-num_shared_oral_water
+num_shared_gingival_water = total_num - num_rectal - num_gingival_only - num_water_only 
+num_shared_gingival_water
 ```
 
 Number of ASVs found in rectal and water samples only 
 
 ```{r n_asvs_rectal_water}
-oral <- subset_samples(rarified_physeq, sample_type == "oral")
-oral = filter_taxa(oral, function(x) sum(x) > 0, TRUE)
-num_oral <- ntaxa(oral)
-num_shared_rectal_water = total_num - num_oral - num_water_only - num_rectal_only 
+gingival <- subset_samples(rarified_physeq, sample_type == "oral")
+gingival = filter_taxa(gingival, function(x) sum(x) > 0, TRUE)
+num_gingival <- ntaxa(gingival)
+num_shared_rectal_water = total_num - num_gingival - num_water_only - num_rectal_only 
 num_shared_rectal_water
 ```
 
 Number of ASVs found in all three sample types
 
 ```{r n_asvs_allSampleTypes}
-num_shared = total_num - num_oral_only - num_rectal_only - num_water_only - num_shared_oral_rectal - num_shared_oral_water - num_shared_rectal_water
+num_shared = total_num - num_gingival_only - num_rectal_only - num_water_only - num_shared_gingival_rectal - num_shared_gingival_water - num_shared_rectal_water
 num_shared
 ```
 
@@ -250,12 +250,12 @@ Now make the Venn diagram -- adjust labels later in Inkscape.
 ```{r plot-venn}
 myV3 <- createVennObj(nSets = 3, sSizes = c(rep(1, 7)))
 
-myV3 <- setVennRegion(myV3, region = c("Group1"), value = as.numeric(num_oral_only[1]))
+myV3 <- setVennRegion(myV3, region = c("Group1"), value = as.numeric(num_gingival_only[1]))
 myV3 <- setVennRegion(myV3, region = c("Group2"), value = as.numeric(num_rectal_only[1]))
 myV3 <- setVennRegion(myV3, region = c("Group3"), value = as.numeric(num_water_only[1]))
 
-myV3 <- setVennRegion(myV3, region = c("Group1","Group2"), value = as.numeric(num_shared_oral_rectal[1]))
-myV3 <- setVennRegion(myV3, region = c("Group1","Group3"), value = as.numeric(num_shared_oral_water[1]))
+myV3 <- setVennRegion(myV3, region = c("Group1","Group2"), value = as.numeric(num_shared_gingival_rectal[1]))
+myV3 <- setVennRegion(myV3, region = c("Group1","Group3"), value = as.numeric(num_shared_gingival_water[1]))
 myV3 <- setVennRegion(myV3, region = c("Group2","Group3"), value = as.numeric(num_shared_rectal_water[1]))
 
 myV3 <- setVennRegion(myV3, region = c("Group1","Group2","Group3"), as.numeric(num_shared[1]))
