@@ -8,10 +8,12 @@ output: html_document
 Sea otters in the wild often exhibit strong dietary preferences towards specific types of prey, such as clams or sea urchins (Tinker et al., 2008, 2012). In this script, we will use diet data that are available for 61 wild sea otters in this study (Tinker et al., 2008, 2012) and evaluate whether there are differences in the rectal microbiotas of wild sea otters with different known dietary preferences.
 
 
-Begin by setting paths and load phyloseq object
+Begin by setting paths + working directory and loading phyloseq object 
 
 ```{r set-paths}
 path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+setwd(path)
+getwd()
 physeq <- readRDS(path, "physeq_lane1.rds")
 ```
 
