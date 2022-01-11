@@ -9,18 +9,13 @@ In this script we will:
 1. Plot an ordination of gingival, rectal, and otter-associated seawater samples (Figure 2C) and perform significance testing to determine whether the composition of sample types is distinct (Figure 2C)
 2. Plot a Venn diagram of sets of gingival, rectal, and otter-associated seawater ASVs (Figure 2D)
 
-Set paths and load phyloseq object (wild sea otter dataset)
+Set paths + working directory and load phyloseq object (wild sea otter dataset)
 
 ```{r}
 path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
-physeq <- readRDS(path, "physeq_lane1.rds")
-```
-
-Set working directory
-
-```{r}
 setwd(path)
 getwd()
+physeq <- readRDS(path, "physeq_lane1.rds")
 ```
 
 Load libraries
