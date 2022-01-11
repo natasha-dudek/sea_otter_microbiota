@@ -18,7 +18,7 @@ Set paths + working directory and load phyloseq object (wild sea otter dataset)
 path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
 setwd(path)
 getwd()
-physeq <- readRDS(path, "physeq_lane2_sppCompare.rds")
+physeq <- readRDS("physeq_spp_compare.rds")
 ```
 
 Load libraries
