@@ -5,12 +5,16 @@ date: "04/12/2018"
 output: html_document
 ---
 
-The oral microbiota has important implications for health, having been linked in humans to diverse diseases ranging from rheumatoid arthritis to adverse pregnancy outcomes (Lu et al., 2019). Here we will investigat variation in bacterial community composition and structure in the gingival microbiotas of wild sea otters. 
+The oral microbiota has important implications for health, having been linked in humans to diverse diseases ranging from rheumatoid arthritis to adverse pregnancy outcomes (Lu et al., 2019). Here we will investigate variation in bacterial community composition and structure in the gingival microbiotas of wild sea otters. 
 
 Note: the clustering portion of this analysis is based on that done in DiGiulio, D.B., et al. "Temporal and spatial variation of the human microbiota during pregnancy." Proceedings of the National Academy of Sciences 112.35 (2015): 11060-11065.
 
+Set paths + working directory and load phyloseq object (wild sea otters lane)
+
 ```{r set-paths}
-path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+path <- file.path("/Users", "path", "to", "dir", fsep="/") 
+setwd(path)
+getwd()
 physeq <- readRDS(path, "physeq_lane1.rds")
 ```
 
