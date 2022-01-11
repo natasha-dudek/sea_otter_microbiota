@@ -12,10 +12,12 @@ More specifically, in this script we will:
 - Perform a bootstrap test to investigate whether the average Unifrac distance between distal gut   specimens within a species is significantly lower than the average distance between samples from sea otters vs North American river otters  
 - Perform differential abundance testing on sea otter vs North American river otter samples to probe how the composition of their microbiotas are distinct  
 
-Begin by setting paths and loading phyloseq object
+Set paths + working directory and load phyloseq object (wild sea otter dataset)
 
 ```{r}
 path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+setwd(path)
+getwd()
 physeq <- readRDS(path, "physeq_lane2_sppCompare.rds")
 ```
 
