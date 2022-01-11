@@ -15,8 +15,8 @@ Set paths + working directory and load phyloseq objects. Note we will need the s
 path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
 setwd(path)
 getwd()
-physeq <- readRDS(path, "physeq_mba_diet.rds") # main physeq object we will work with
-physeq_spp <- readRDS(path, "physeq_spp_compare.rds") # will grab samples from two sea otters
+physeq <- readRDS("physeq_mba_diet.rds") # main physeq object we will work with
+physeq_spp <- readRDS("physeq_spp_compare.rds") # will grab samples from two sea otters
 ```
 
 Load libraries
