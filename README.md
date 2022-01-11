@@ -11,9 +11,9 @@ Southern sea otters are a threatened keystone sub-species in coastal ecosystems.
 Sequencing data for this project is available through NCBI BioProject [PRJNA726636](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA726636/). Raw reads for the amplicon survey and the shotgun sequencing analysis were deposited to SRA and are associated with BioSamples SAMN19311023 - SAMN19311742. 
 
 For maximum reproducibility, the following phyloseq objects have been upload to the repo: 
-- physeq_lane1.rds represents all samples sequenced on lane 1. All analyses focused on the microbiota of wild sea otters use this phyloseq object. 
-- physeq_spp_compare.rds consists of samples sequenced on lane2. It is used for analyses focused on comparing the distal gut microbiota of different otter species.
-- physeq_mba_diet.rds consists of samples sequenced on lane2. It is used for analysis of the MBA diet shift experiment.
+- physeq_lane1.rds represents all samples sequenced on lane 1. All analyses focused on the microbiota of wild sea otters use this phyloseq object
+- physeq_spp_compare.rds consists of samples sequenced on lane2. It is used for analyses focused on comparing the distal gut microbiota of different otter species
+- physeq_mba_diet.rds consists of samples sequenced on lane2. It is used for analysis of the MBA diet shift experiment
 
 ### Installation
 
