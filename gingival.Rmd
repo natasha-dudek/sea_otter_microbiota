@@ -15,7 +15,7 @@ Set paths + working directory and load phyloseq object (wild sea otters lane)
 path <- file.path("/Users", "path", "to", "dir", fsep="/") 
 setwd(path)
 getwd()
-physeq <- readRDS(path, "physeq_lane1.rds")
+physeq <- readRDS("physeq_lane1.rds")
 ```
 
 Load libraries
