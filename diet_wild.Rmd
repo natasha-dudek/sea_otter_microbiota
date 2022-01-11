@@ -1,0 +1,118 @@
+---
+title: "Effect of diet specialization in wild sea otters"
+author: "Natasha Dudek"
+date: "6/11/2019"
+output: html_document
+---
+
+Sea otters in the wild often exhibit strong dietary preferences towards specific types of prey, such as clams or sea urchins (Tinker et al., 2008, 2012). In this script, we will use diet data that are available for 61 wild sea otters in this study (Tinker et al., 2008, 2012) and evaluate whether there are differences in the rectal microbiotas of wild sea otters with different known dietary preferences.
+
+
+Begin by setting paths and load phyloseq object
+
+```{r set-paths}
+path <- file.path("/Users", "path", "to", "dir", fsep="/") # path to working dir
+physeq <- readRDS(path, "physeq_lane1.rds")
+```
+
+Load libraries
+
+```{r load-libraries}
+library("ggplot2"); packageVersion("ggplot2")
+library("phyloseq"); packageVersion("phyloseq")
+library("plyr"); packageVersion("plyr")
+```
+
+ggplot2 package theme set
+
+```{r}
+theme_set(theme_bw())
+```
+
+Filter dataset. We want:    
+- Samples from wild sea otters (facility = CDFW)     
+- Only one sample per individual sea otter and sample type       
+- Gingival, rectal, and seawater samples for each sea otter  
+- Remove ASVs with zero reads
+
+```{r}
+physeq <- subset_samples(physeq, facility == "CDFW") 
+physeq <- subset_samples(physeq, duplicate_capture == "no")
+physeq_r <- subset_samples(physeq, sample_type == "rectal")
+physeq_r = filter_taxa(physeq_r, function(x) sum(x) > 0, TRUE)
+```
+
+For this analysis, we're going to focus on the primary prey phylum each sea otter specializes on. The phylum level is selected on the basis that prey items from different phyla are the most likely to have compositional difference that could lead to specialization of the microbiota of sea otters. For example, molluscs and arthropods contain chitin, whereas echinoderms and annelids don't.
+
+Let's get some stats on how many sea otters specialize on each primary prey phylum.
+
+```{r}
+table(sample_data(physeq_r)$primary_phylum)
+```
+
+Now prune rare taxa by removing OTUs that do not show appear more than 3 times in more than 5% of the samples. This protects against an OTU with small mean & trivially large C.V.
+
+```{r}
+temp = genefilter_sample(physeq_r, filterfun_sample(function(x) x > 3), A=0.05*nsamples(physeq_r))
+physeq_r = prune_taxa(temp, physeq_r)
+```
+
+Now fix sample type levels in our sample data.  
+
+```{r}
+sample_data(physeq_r)$primary_phylum <- factor(
+  sample_data(physeq_r)$primary_phylum, 
+  levels = c("mollusca","echinodermata","arthropoda", "annelida")
+)
+```
+
+## Ordinate
+
+Let's see if there is any evidence of sea otters who specialize on different prey items having a distinct rectal microbiota.
+
+Perform ordination using four diversity metrics. These metrics were selected such that all combinations of the following characteristics are accounted for:  
+a) Presence/absence only, b) relative abundance  
+a) Phylogenetically uniformed, b) phylogenetically informed  
+
+```{r}
+
+dist_methods = c("jaccard","unifrac","bray","wunifrac")
+
+plist <- vector("list", length(dist_methods))
+names(plist) = dist_methods
+
+
+for( i in dist_methods ){
+    iDist <- distance(physeq_r, method=i)
+    iMDS  <- ordinate(physeq_r, "MDS", distance=iDist)
+ 	evals <- iMDS$values$Eigenvalues
+    p <- NULL
+    p <- plot_ordination(physeq_r, iMDS, color="primary_phylum") +
+  coord_fixed(sqrt(evals[2] / evals[1]))
+    plist[[i]] = p
+}
+
+df = ldply(plist, function(x) x$data)
+names(df)[1] <- "distance"
+p = ggplot(df, aes(Axis.1, Axis.2, color=primary_phylum))
+p = p + geom_point(size=1, alpha=0.7)
+p = p + facet_wrap(~distance, scales="free")
+p = p + scale_color_manual(values = c("#ffb600", "#cc0000", "#caa5ff", "#0040ff"))
+p
+```
+
+It doesn't look like there is any clear pattern here. Nonetheless, we will save an ordination for Figure 4C.
+
+```{r unifrac-ordination-only}
+physeq_r.ord <- ordinate(physeq_r, "MDS", "unifrac")
+evals <- physeq_r.ord$values$Eigenvalues
+p = plot_ordination(physeq_r, physeq_r.ord, color="primary_phylum") +
+	geom_point(size=2) +   
+    coord_fixed(sqrt(evals[2] / evals[1])) #+
+    labs(col = "pre_post", shape = "brd_number")
+p = p + scale_color_manual(values = c("#ffb600", "#cc0000", "#caa5ff", "#0040ff"))
+p = p + scale_shape_manual(values=c(0, 19))
+p
+ggsave('Fig4C.pdf', plot = p) 
+```
+
